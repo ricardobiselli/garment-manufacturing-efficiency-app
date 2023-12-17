@@ -55,27 +55,44 @@ def main_app():
 
     selected_idx = int(input("Enter the number of the garment to start production: ")) - 1
     selected_garment = garments_list[selected_idx]
-
-    print(f"Garment selected for production: {selected_garment.name}")
-    print(f"Total Time for {selected_garment.name}: {selected_garment.total_time} minutes")
-
+    
     print("How many garments are in production?")
     quantity = int(input())
 
-    production = selected_garment.total_time * quantity
-    print(f"Total production time for {quantity} garments: {production} minutes")
+    print("Available operations:")
+    for idx, operation in enumerate(selected_garment.operations):
+        print(f"{idx + 1}. Operation: {operation}")
+
+    selected_operation_idx = int(input("Enter the number of the operation to perform: ")) - 1
+    selected_operation = list(selected_garment.operations.keys())[selected_operation_idx]
+
+   
+    print(f"Garment selected for production: {selected_garment.name}")
+    
+    print(f"Total Time for {selected_garment.name}: {float(selected_garment.total_time) * quantity} minutes")
+    print(f"Operation selected: {selected_operation}")
+    selected_operation_time = selected_garment.operations[selected_operation]
+    print(f"Total time for this operation: {selected_operation_time} minutes")
+
+    production = selected_operation_time * quantity
+    print(f"Total production time for {quantity} {selected_operation}: {production} minutes")
 
     
-        
+    completed_operations = 0
+    start_time = time.time()
 
+    while completed_operations < production:
+        input("Press Enter when an operation is completed:")
+        completed_operations += 1
 
-def calculate_expected_time(garment, quantity):
-    return garment.total_time * quantity
+        elapsed_time = time.time() - start_time
+        time_per_operation = elapsed_time / completed_operations if completed_operations > 0 else 0
+        remaining_operations = production - completed_operations
+        time_remaining = remaining_operations * time_per_operation
 
-def check_production_progress(expected_time, start_time, completed_processes):
-    elapsed_time = time.time() - start_time
-    estimated_completion_time = (expected_time / completed_processes) * (elapsed_time)
-    return elapsed_time, estimated_completion_time
+        print(f"Operations completed: {completed_operations}/{production}")
+        print(f"Elapsed time: {elapsed_time:.2f} seconds")
+        print(f"Estimated time remaining: {time_remaining:.2f} seconds")
 
 
 
