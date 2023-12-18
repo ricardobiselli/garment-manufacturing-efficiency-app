@@ -1,6 +1,5 @@
-import time
-from  models import Garment
-
+import time, os
+from  models import *
 garments_list = []
 
 #############################################################
@@ -28,11 +27,11 @@ def measure_time():
 
 #############################################################
 
-
 def main_app():
     while True:
         print("Enter the name of the garment (or 'done' to finish adding garments):")
         garment_name = input()
+    
         if garment_name.lower() == 'done':
             break
         garment = Garment(garment_name)
@@ -58,6 +57,9 @@ def main_app():
     
     print("How many garments are in production?")
     quantity = int(input())
+    
+    total_operations = len(selected_garment.operations) * quantity
+    #print(f"Total operations for {quantity} {selected_garment.name}: {total_operations}")
 
     print("Available operations:")
     for idx, operation in enumerate(selected_garment.operations):
@@ -66,33 +68,35 @@ def main_app():
     selected_operation_idx = int(input("Enter the number of the operation to perform: ")) - 1
     selected_operation = list(selected_garment.operations.keys())[selected_operation_idx]
 
-   
+    os.system("clear")
     print(f"Garment selected for production: {selected_garment.name}")
     
     print(f"Total Time for {selected_garment.name}: {float(selected_garment.total_time) * quantity} minutes")
     print(f"Operation selected: {selected_operation}")
     selected_operation_time = selected_garment.operations[selected_operation]
-    print(f"Total time for this operation: {selected_operation_time} minutes")
-
-    production = selected_operation_time * quantity
-    print(f"Total production time for {quantity} {selected_operation}: {production} minutes")
-
+    print(f"Individual time for this operation: {selected_operation_time} minutes")
+    production_time = selected_operation_time * quantity
+    print(f"Total production time for {quantity} {selected_operation}: {production_time} minutes")
     
     completed_operations = 0
     start_time = time.time()
 
-    while completed_operations < production:
+    while completed_operations < quantity:
         input("Press Enter when an operation is completed:")
         completed_operations += 1
 
         elapsed_time = time.time() - start_time
         time_per_operation = elapsed_time / completed_operations if completed_operations > 0 else 0
-        remaining_operations = production - completed_operations
+        remaining_operations = quantity - completed_operations
         time_remaining = remaining_operations * time_per_operation
 
-        print(f"Operations completed: {completed_operations}/{production}")
+        print(f"Operations completed: {completed_operations}/{quantity}")
         print(f"Elapsed time: {elapsed_time:.2f} seconds")
         print(f"Estimated time remaining: {time_remaining:.2f} seconds")
+        print("-------------------------------------------------------------------")
+        print(f"{selected_operation} progress: % {float(completed_operations)*100/(quantity)}")
+        print(f"{selected_garment.name} progress: % {float(completed_operations)*100/(total_operations)}")
+        print("-------------------------------------------------------------------")
 
 
 
