@@ -1,87 +1,117 @@
-from django.forms import formset_factory
-from django.shortcuts import render, redirect
-from .models import Garment, Operation
+from .models import Garment, Operation, OperationRecord
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Garment
 from .forms import OperationFormSet
+from django.http import JsonResponse
+import json
+from django.views.decorators.csrf import csrf_exempt
 
-from django.shortcuts import render, redirect
-from .forms import OperationFormSet
 
 def add_garment(request):
     if request.method == 'POST':
-        formset = OperationFormSet(request.POST)
-        if formset.is_valid():
-            garment_name = request.POST.get('garment_name')
+        garment_name = request.POST.get('name')
+        if garment_name:
             garment = Garment.objects.create(name=garment_name)
-            
-            for form in formset:
-                if form.is_valid():
-                    operation_name = form.cleaned_data.get('operation_name')
-                    time_allowed = form.cleaned_data.get('time_allowed')
-                    Operation.objects.create(
-                        garment_name=garment,
-                        operation_name=operation_name,
-                        time_allowed=time_allowed
-                    )
-            
-            return redirect('add_garment_success')  
+
+            formset = OperationFormSet(request.POST, instance=garment)
+
+            if formset.is_valid():
+                formset.save()
+
+                return redirect('add_garment_success')
+
     else:
         formset = OperationFormSet()
 
     return render(request, 'add_garment.html', {'formset': formset})
 
 
-"""OperationFormSet = formset_factory(OperationsForm, extra=1)
-    
-    if request.method == 'POST':
-        formset = OperationFormSet(request.POST)
-        garment_name = request.POST.get('garment_name')
-        
-        print("Formset is valid:", formset.is_valid())
-        print("Formset errors:", formset.errors)
-        
-        if garment_name and formset.is_valid():
-            print("Formset cleaned data:", formset.cleaned_data)
-            print(f"Garment Name: '{garment_name}'")
-
-            garment = Garment.objects.create(name=garment_name)
-            print(f"Garment '{garment_name}' created")
-
-            for i, form in enumerate(formset):
-                print(f"Iteration {i+1} in the for loop")
-                
-                operation_name = form.cleaned_data.get('operation_name')
-                time_allowed = form.cleaned_data.get('time_allowed')
-                
-                if operation_name and time_allowed:
-                    new_operation = Operation.objects.create(
-                        garment_name=garment,
-                        operation_name=operation_name,
-                        time_allowed=time_allowed
-                    )
-                    print(f"Operation {i+1} - Name: '{operation_name}', Time Allowed: {time_allowed}")
-                    print(f"Associated with Garment '{garment_name}'")
-
-            return redirect('add_garment_success')
-        else:
-            print("Form is not valid or garment name is missing")
-
-    else:
-        formset = OperationFormSet()
-
-    return render(request, 'add_garment.html', {'formset': formset})"""
+def home_view(request):
+    return render(request, 'home.html')
 
 
+def add_garment_success(request):
+    return render(request, 'add_garment_success.html')
 
 
 def select_garment(request):
     garments = Garment.objects.all()
-    return render(request, 'select_garment.html', {'garments': garments})
+    selected_garment = None
+    selected_operation = None
+    quantity = None
 
-def home_view(request):
-    return render(request, 'home.html')
+    if request.method == "POST":
+        selected_garment_id = request.POST.get('garment')
+        if selected_garment_id:
+            selected_garment = Garment.objects.get(id=selected_garment_id)
+
+            selected_operation_id = request.POST.get('operation')
+            if selected_operation_id:
+                selected_operation = Operation.objects.get(
+                    id=selected_operation_id)
+                quantity = request.POST.get('quantity')
+
+    return render(request, 'select_garment.html', {'garments': garments, 'selected_garment': selected_garment, 'selected_operation': selected_operation, 'quantity': quantity})
+
 
 def start_production(request):
-    return render(request, 'start_production.html')
+    selected_garment_id = request.POST.get('garment')
+    selected_operation_id = request.POST.get('operation')
+    quantity = request.POST.get('quantity')
+
+    selected_garment = Garment.objects.get(
+        id=selected_garment_id) if selected_garment_id else None
+    selected_operation = Operation.objects.get(
+        id=selected_operation_id) if selected_operation_id else None
+
+    context = {
+        'selected_garment': selected_garment,
+        'selected_operation': selected_operation,
+        'quantity': quantity,
+        'selected_garment_id': selected_garment_id,
+    }
+
     
-def add_garment_success(request):
-    return render(request, 'add_garment_success.html')
+
+    return render(request, 'start_production.html', context)
+
+
+def get_operations(request, garment_id):
+    print(f"Received request for garment_id: {garment_id}")
+    try:
+        garment = Garment.objects.get(id=garment_id)
+        operations = garment.operation_set.all()
+        data = [{'id': operation.id, 'operation_name': operation.operation_name} for operation in operations]
+        return JsonResponse(data, safe=False)
+    except Garment.DoesNotExist:
+        return JsonResponse([], safe=False)
+
+@csrf_exempt
+def update_operation(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+
+            # Extract relevant data from the JSON
+            total_elapsed = data.get('totalElapsed')
+            individual_times = data.get('individualTimes')
+            percentage_progress = data.get('percentageProgress')
+            selected_garment_id = data.get('selectedGarmentId')
+            print('Selected Garment ID:', selected_garment_id)
+
+            # Assuming you have a Garment instance
+            garment = Garment.objects.get(id=selected_garment_id)
+
+            # Save the data to your OperationRecord model or any other relevant model
+            operation_record = OperationRecord.objects.create(
+                garment=garment,
+                elapsed_time=total_elapsed,
+                efficiency=0,  # You need to calculate efficiency based on your logic
+                progress_percentage=percentage_progress
+            )
+
+            return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

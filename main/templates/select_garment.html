@@ -1,23 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Select Garment</title>
     {% load static %}
     <script src="{% static 'js/common.js' %}"></script>
-</head>
-<body>
-    <h1>Select Garment for Production</h1>
-    <form method="post" action="{% url 'start_production' %}">
-        {% csrf_token %}
-        <label for="garment">Choose a Garment:</label>
-        <select name="garment">
-            {% for garment in garments %}
-                <option value="{{ garment.id }}">{{ garment.name }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Start Production</button>
+  </head>
+  <body>
+    <h1>Select Garment</h1>
+    <form id="selectGarmentForm" method="post" action="{% url 'select_garment' %}">
+      {% csrf_token %}
+      <label for="garment">Select a garment to start production:</label>
+      <select id="garmentDropdown" name="garment" required>
+        {% for garment in garments %}
+          <option value="{{ garment.id }}">{{ garment.name }}</option>
+        {% endfor %}
+      </select><br />
+
+      <div id="operationDropdownContainer" style="display: none;">
+        <label for="operation">Select an operation:</label>
+        <select id="operationDropdown" name="operation" required>
+          {% for operation in selected_garment.operation_set.all %}
+            <option value="{{ operation.id }}">{{ operation.operation_name }}</option>
+          {% endfor %}
+        </select><br />
+      </div>
+
+      <p>Quantity of garments in production:</p>
+      <input type="number" class="quantity" name="quantity" /><br />
+
+      <input type="submit" value="Start production" formaction="{% url 'start_production' %}" />
     </form>
-</body>
+  </body>
 </html>

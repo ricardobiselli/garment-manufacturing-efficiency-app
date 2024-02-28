@@ -3,12 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>start production</title>
+    <title>Start Production</title>
+
     {% load static %}
     <script src="{% static 'js/common.js' %}"></script>
+<script>
+  const quantity = {{ quantity }};
+  const timeAllowed = {{ selected_operation.time_allowed }};
+  const selectedGarmentId = {{ selected_garment_id }};
+</script>
+
   </head>
   <body>
-    <h1>start production</h1>
-    <p>placeholder</p>
+    <h1>Start Production</h1>
+
+    <p>Selected Garment: {{ selected_garment }}</p>
+    <p>Selected Operation: {{ selected_operation }}</p>
+    <p>Quantity: {{ quantity }}</p>
+    <p>time allowed: {{ selected_garment.time_allowed }}</p>
+
+    <button onclick="startStopwatch()">Start Operation</button>
+    <button id="recordTimestampButton" onclick="recordTimestamp(selectedGarmentId)">Record Timestamp</button>
+    <button onclick="endProduction()">End production</button>
+    <p id="stopwatch-display">0m 0s</p>
+
+    <h2>Recorded Timestamps:</h2>
+    <ul id="recorded-timestamps"></ul>
   </body>
 </html>

@@ -5,27 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add Garment</title>
     {% load static %}
-    <!-- <script src="{% static 'js/common.js' %}"></script> -->
+    <script src="{% static 'js/common.js' %}"></script> 
   </head>
   <body>
     <h1>Add Garment Operations</h1>
 
     <form method="post" action="{% url 'add_garment' %}">
       {% csrf_token %}
-      <label for="garment_name">Garment Name:</label>
-      <input type="text" id="garment_name" name="garment_name" /><br /><br />
 
-      <div id="operations-container">
-        {{ formset.management_form }}
-        {% for form in formset %}
-          <div class="operation">{{ form.operation_name }}
-            {{ form.time_allowed }}</div>
-        {% endfor %}
+      <div>
+          <label for="id_name">Garment Name:</label>
+          <input type="text" name="name" id="id_name" required>
       </div>
 
-      <button type="submit">Add Garment</button>
-    </form>
+      <div>
+          {{ formset.management_form }}
+          {% for form in formset %}
+              <fieldset>
+                  <legend>Operation {{ forloop.counter }}</legend>
+                  <div>
+                      <label for="{{ form.operation_name.id_for_label }}">Operation Name:</label>
+                      {{ form.operation_name }}
+                  </div>
+                  <div>
+                      <label for="{{ form.time_allowed.id_for_label }}">Time Allowed:</label>
+                      {{ form.time_allowed }}
+                  </div>
+              </fieldset>
+          {% endfor %}
+      </div>
 
-    <!-- Remaining body content -->
-  </body>
+      <div>
+          <input type="submit" value="Save">
+      </div>
+  </form>
+</body>
 </html>
